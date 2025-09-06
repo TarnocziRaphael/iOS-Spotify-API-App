@@ -67,6 +67,50 @@ class Network: ObservableObject {
         }
     }
     
+    func fetchTopArtists(timeRange: String, completion: @escaping([Artist]) -> Void) {
+        AF.request(
+            "\(baseURL)me/top/artists?time_range=\(timeRange)&limit=50",
+            method: .get,
+            headers: self.headers
+        )
+        .responseDecodable(of: TopArtistsResponse.self) { response in
+            switch response.result {
+            case .success(let data):
+                print("✅ Fetch of top artists successful")
+                completion(data.items)
+            case .failure(let error):
+                if let data = response.data, let text = String(data: data, encoding: .utf8) {
+                    print("❌ Fetch of top artists failed (response):", text)
+                } else {
+                    print("❌ Fetch of top artists failed:", error.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    func fetchTopTracks(timeRange: String, completion: @escaping([Track]) -> Void) {
+        AF.request(
+            "\(baseURL)me/top/tracks?time_range=\(timeRange)&limit=50",
+            method: .get,
+            headers: self.headers
+        )
+        .responseDecodable(of: TopTracksResponse.self) { response in
+            switch response.result {
+            case .success(let data):
+                print("✅ Fetch of top tracks successful")
+                completion(data.items)
+            case .failure(let error):
+                if let data = response.data, let text = String(data: data, encoding: .utf8) {
+                    print("❌ Fetch of top tracks failed (response):", text)
+                } else {
+                    print("❌ Fetch of top tracks failed:", error.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    func playSong(id: String) {}
+    
 }
 
 
@@ -80,4 +124,51 @@ struct TokenRefresh: Codable {
         case refreshToken = "refresh_token"
         case expiration = "expires_in"
     }
+}
+
+struct Track: Codable, Identifiable {
+    let id: String
+    let name: String
+    let popularity: Int
+    let album: Album
+    let artists: [Artist]
+    
+    var artistNames: String {
+        artists.map { $0.name }.joined(separator: ", ")
+    }
+}
+
+struct Picture: Codable {
+    let url: String
+}
+
+struct Album: Codable {
+    let name: String
+    let images: [Picture]
+    
+    var firstImageURL: String? {
+        return images.first?.url
+    }
+}
+
+struct Artist: Codable, Identifiable {
+    let id: String
+    let name: String
+    let popularity: Int?
+    let images: [Picture]?
+    
+    var firstImageURL: String? {
+        if let images = self.images {
+            return images.first?.url
+        }
+        return ""
+    }
+}
+
+struct TopTracksResponse: Codable {
+    let items: [Track]
+}
+
+struct TopArtistsResponse: Codable {
+    let items: [Artist]
 }

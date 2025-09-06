@@ -89,6 +89,8 @@ class SpotifyController: NSObject, ObservableObject {
                 print("⚠️Token expired, need reauthorization")
                 if let network = self.network {
                     network.refreshToken()
+                } else {
+                    print("⚠️ No refresh possible")
                 }
             }
             
