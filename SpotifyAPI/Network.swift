@@ -18,6 +18,7 @@ class Network: ObservableObject {
         self.spotifyController = spotifyController
         self.updateHeaders()
     }
+    
     func updateHeaders() {
         if let token = spotifyController.accessToken {
             headers = [
@@ -112,11 +113,19 @@ class Network: ObservableObject {
         }
     }
     
-    func playTrack(trackID: String, deviceID: String) {
-        let body: [String: Any] = [
-            "uris": ["spotify:track:\(trackID)"],
-            "position_ms": 0
-        ]
+    func playMusic(id: String, type: String,deviceID: String) {
+        var body: [String: Any] = [:]
+        if type == "artist" {
+            body = [
+                "context_uri": "spotify:artist:\(id)",
+                "position_ms": 0
+            ]
+        } else if type == "track" {
+            body = [
+                "uris": ["spotify:track:\(id)"],
+                "position_ms": 0
+            ]
+        }
         AF.request(
             "\(baseURL)me/player/play?device_id=\(deviceID)",
             method: .put,
@@ -124,20 +133,19 @@ class Network: ObservableObject {
             encoding: JSONEncoding.default,
             headers: self.headers
         )
-         .response { response in
+        .response { response in
             switch response.result {
             case .success:
-                print("✅ Track started playing successfully")
+                print("✅ Music started playing successfully")
             case .failure(let error):
                 if let data = response.data, let text = String(data: data, encoding: .utf8) {
-                    print("❌ Playing track failed (response):", text)
+                    print("❌ Playing music failed (response):", text)
                 } else {
-                    print("❌ Playing track failed:", error.localizedDescription)
+                    print("❌ Playing music failed:", error.localizedDescription)
                 }
             }
         }
     }
-
     
     func fetchAvailableDevices(completion: @escaping([Device]) -> Void) {
         AF.request(

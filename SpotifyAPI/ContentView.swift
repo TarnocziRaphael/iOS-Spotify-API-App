@@ -102,6 +102,24 @@ struct ContentView: View {
                                         }
                                         
                                         Spacer()
+                                        
+                                        Button(action: {
+                                            network.fetchAvailableDevices() { devices in
+                                                guard let device_id = devices.first?.id else {
+                                                    print("⚠️ No devices available")
+                                                    self.devicesError = true
+                                                    return
+                                                }
+                                                network.playMusic(id: artist.id, type: "artist", deviceID: device_id)
+                                            }
+                                        }) {
+                                            Image(systemName: "play.fill")
+                                                .font(.system(size: 25))
+                                                .foregroundStyle(.white)
+                                                .padding(10)
+                                                .background(Circle().fill(Color.blue))
+                                                .shadow(radius: 5)
+                                        }
                                     }
                                     .padding(.vertical, 5)
                                 }
@@ -164,7 +182,7 @@ struct ContentView: View {
                                                     self.devicesError = true
                                                     return
                                                 }
-                                                network.playTrack(trackID: track.id, deviceID: device_id)
+                                                network.playMusic(id: track.id, type: "track", deviceID: device_id)
                                             }
                                         }) {
                                             Image(systemName: "play.fill")
@@ -181,14 +199,7 @@ struct ContentView: View {
                                 .refreshable {
                                     fetchData()
                                 }
-                                .toast(isPresented: $devicesError, dismissAfter: 1.5) {
-                                    Text("⚠️ No devices available")
-                                        .font(.title2)
-                                        .padding()
-                                        .background(Color.red)
-                                        .foregroundColor(.white)
-                                        .cornerRadius(8)
-                                }
+                                
                             }
                         }
                         .tag("tracks")
@@ -197,6 +208,14 @@ struct ContentView: View {
                     .onChange(of: selectedPage) {
                         fetchData()
                     }
+                }
+                .toast(isPresented: $devicesError, dismissAfter: 1.5) {
+                    Text("⚠️ No devices available")
+                        .font(.title2)
+                        .padding()
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
                 .onAppear() {
                     fetchData()
