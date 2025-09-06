@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var devicesError: Bool = false
     @State private var deviceName: String = ""
     @State private var user: User?
+    @State private var displayUserInfo: Bool = false
     
     var body: some View {
         ZStack {
@@ -41,6 +42,9 @@ struct ContentView: View {
                                     .fill(Color.gray.opacity(0.3))
                                     .frame(width: 30, height: 30)
                                     .overlay(ProgressView())
+                            }
+                            .onTapGesture {
+                                self.displayUserInfo = true
                             }
                         }
                         Spacer()
@@ -246,6 +250,14 @@ struct ContentView: View {
                         .lineLimit(1)
                         .padding()
                         .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .toast(isPresented: $displayUserInfo, dismissAfter: 1.5) {
+                    Text("🙋 Hello, \(user?.name ?? "User")!")
+                        .font(.title2)
+                        .padding()
+                        .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
