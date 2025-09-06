@@ -8,12 +8,35 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @EnvironmentObject var spotifyController: SpotifyController
+    @EnvironmentObject var network: Network
+    
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+            if let token = spotifyController.accessToken {
+                Text("🔓 Authorized")
+                Button(action: {
+                    network.refreshToken(spotifyController: spotifyController)
+                }) {
+                    Text("Refresh Spotify token")
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+            } else {
+                Text("🔒 Not Authorized")
+                Button(action: {
+                    spotifyController.authorize()
+                }) {
+                    Text("Connect to Spotify")
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+            }
         }
         .padding()
     }

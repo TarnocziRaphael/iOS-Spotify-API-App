@@ -9,11 +9,14 @@
 /* Begin PBXBuildFile section */
 		2EF389982E6C47BA0033378A /* SpotifyiOS in Frameworks */ = {isa = PBXBuildFile; productRef = 2EF389972E6C47BA0033378A /* SpotifyiOS */; };
 		2EF3899D2E6C4A960033378A /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 2EF3899C2E6C4A960033378A /* Config.xcconfig */; };
+		2EF3899F2E6C4D030033378A /* SpotifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF3899E2E6C4CFE0033378A /* SpotifyController.swift */; };
+		2EF389A92E6C55850033378A /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 2EF389A82E6C55850033378A /* Alamofire */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		2EF389872E6C47240033378A /* SpotifyAPI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpotifyAPI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2EF3899C2E6C4A960033378A /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		2EF3899E2E6C4CFE0033378A /* SpotifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -43,6 +46,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2EF389982E6C47BA0033378A /* SpotifyiOS in Frameworks */,
+				2EF389A92E6C55850033378A /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,6 +56,7 @@
 		2EF3897E2E6C47240033378A = {
 			isa = PBXGroup;
 			children = (
+				2EF3899E2E6C4CFE0033378A /* SpotifyController.swift */,
 				2EF3899C2E6C4A960033378A /* Config.xcconfig */,
 				2EF389892E6C47240033378A /* SpotifyAPI */,
 				2EF389882E6C47240033378A /* Products */,
@@ -87,6 +92,7 @@
 			name = SpotifyAPI;
 			packageProductDependencies = (
 				2EF389972E6C47BA0033378A /* SpotifyiOS */,
+				2EF389A82E6C55850033378A /* Alamofire */,
 			);
 			productName = SpotifyAPI;
 			productReference = 2EF389872E6C47240033378A /* SpotifyAPI.app */;
@@ -118,6 +124,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				2EF389962E6C47BA0033378A /* XCRemoteSwiftPackageReference "ios-sdk" */,
+				2EF389A72E6C55850033378A /* XCRemoteSwiftPackageReference "Alamofire" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2EF389882E6C47240033378A /* Products */;
@@ -145,6 +152,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2EF3899F2E6C4D030033378A /* SpotifyController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -389,6 +397,14 @@
 				minimumVersion = 5.0.1;
 			};
 		};
+		2EF389A72E6C55850033378A /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -396,6 +412,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2EF389962E6C47BA0033378A /* XCRemoteSwiftPackageReference "ios-sdk" */;
 			productName = SpotifyiOS;
+		};
+		2EF389A82E6C55850033378A /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2EF389A72E6C55850033378A /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
