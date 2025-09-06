@@ -12,7 +12,7 @@ import SwiftUI
 class Network: ObservableObject {
     private var spotifyController: SpotifyController
     private let baseURL = "https://api.spotify.com/v1/"
-    private var headers: HTTPHeaders = []
+    private var headers: HTTPHeaders = [:]
     
     init(spotifyController: SpotifyController) {
         self.spotifyController = spotifyController
@@ -20,7 +20,10 @@ class Network: ObservableObject {
     }
     func updateHeaders() {
         if let token = spotifyController.accessToken {
-            headers = ["Authorization": "Bearer \(token)"]
+            headers = [
+                "Authorization": "Bearer \(token)",
+                "Content-Type": "application/json"
+            ]
         }
     }
     
@@ -109,8 +112,52 @@ class Network: ObservableObject {
         }
     }
     
-    func playSong(id: String) {}
+    func playTrack(trackID: String, deviceID: String) {
+        let body: [String: Any] = [
+            "uris": ["spotify:track:\(trackID)"],
+            "position_ms": 0
+        ]
+        AF.request(
+            "\(baseURL)me/player/play?device_id=\(deviceID)",
+            method: .put,
+            parameters: body,
+            encoding: JSONEncoding.default,
+            headers: self.headers
+        )
+         .response { response in
+            switch response.result {
+            case .success:
+                print("✅ Track started playing successfully")
+            case .failure(let error):
+                if let data = response.data, let text = String(data: data, encoding: .utf8) {
+                    print("❌ Playing track failed (response):", text)
+                } else {
+                    print("❌ Playing track failed:", error.localizedDescription)
+                }
+            }
+        }
+    }
+
     
+    func fetchAvailableDevices(completion: @escaping([Device]) -> Void) {
+        AF.request(
+            "\(baseURL)me/player/devices",
+            method: .get,
+            headers: self.headers
+        ).responseDecodable(of: DevicesResponse.self) { response in
+            switch response.result {
+            case .success(let data):
+                print("✅ Fetch of available devices successful")
+                completion(data.devices)
+            case .failure(let error):
+                if let data = response.data, let text = String(data: data, encoding: .utf8) {
+                    print("❌ Fetch of available devices failed (response):", text)
+                } else {
+                    print("❌ Fetch of available devices failed:", error.localizedDescription)
+                }
+            }
+        }
+    }
 }
 
 
@@ -158,10 +205,7 @@ struct Artist: Codable, Identifiable {
     let images: [Picture]?
     
     var firstImageURL: String? {
-        if let images = self.images {
-            return images.first?.url
-        }
-        return ""
+        return images?.first?.url
     }
 }
 
@@ -171,4 +215,17 @@ struct TopTracksResponse: Codable {
 
 struct TopArtistsResponse: Codable {
     let items: [Artist]
+}
+
+struct Device: Codable, Identifiable {
+    let id: String
+}
+
+struct DevicesResponse: Codable {
+    let devices: [Device]
+}
+
+struct PlayBody: Encodable {
+    let uris: [String]
+    let position_ms: Int
 }

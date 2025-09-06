@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ToastUI
 
 struct ContentView: View {
     
@@ -17,6 +18,7 @@ struct ContentView: View {
     @State private var isLoading: Bool = false
     @State private var topArtists: [Artist] = []
     @State private var topTracks: [Track] = []
+    @State private var devicesError: Bool = false
     
     let options = ["4 Wochen", "6 Monate", "1 Jahr"]
     let request_terms = [
@@ -115,7 +117,7 @@ struct ContentView: View {
                                 Spacer()
                             } else {
                                 HStack {
-                                    Text("Top Artists")
+                                    Text("Top Tracks")
                                         .font(.title)
                                         .bold()
                                         .padding()
@@ -153,7 +155,14 @@ struct ContentView: View {
                                         Spacer()
                                         
                                         Button(action: {
-                                            
+                                            network.fetchAvailableDevices() { devices in
+                                                guard let device_id = devices.first?.id else {
+                                                    print("⚠️ No devices available")
+                                                    self.devicesError = true
+                                                    return
+                                                }
+                                                network.playTrack(trackID: track.id, deviceID: device_id)
+                                            }
                                         }) {
                                             Image(systemName: "play.fill")
                                                 .font(.system(size: 25))
@@ -166,6 +175,14 @@ struct ContentView: View {
                                     .padding(.vertical, 5)
                                 }
                                 .listStyle(PlainListStyle())
+                                .toast(isPresented: $devicesError, dismissAfter: 1.5) {
+                                    Text("⚠️ No devices available")
+                                        .font(.title2)
+                                        .padding()
+                                        .background(Color.red)
+                                        .foregroundColor(.white)
+                                        .cornerRadius(8)
+                                }
                             }
                         }
                         .tag("tracks")
@@ -211,7 +228,7 @@ struct ContentView: View {
                 }
             }
         }
- 
+        
     }
 }
 

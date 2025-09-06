@@ -38,7 +38,7 @@ class SpotifyController: NSObject, ObservableObject {
     }
     
     func authorize() {
-        let scopes: SPTScope = [.userReadPrivate, .userTopRead, .userModifyPlaybackState]
+        let scopes: SPTScope = [.userReadPrivate, .userTopRead, .userModifyPlaybackState, .userReadPlaybackState]
         let campaign = "spotify_auth_test"
         
         if #available(iOS 13, *) {
@@ -119,6 +119,9 @@ extension SpotifyController: SPTSessionManagerDelegate {
                 refreshToken: session.refreshToken,
                 expiration: session.expirationDate
             )
+            if let network = self.network {
+                network.updateHeaders()
+            }
         }
     }
     
