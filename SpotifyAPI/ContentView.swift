@@ -106,6 +106,9 @@ struct ContentView: View {
                                     .padding(.vertical, 5)
                                 }
                                 .listStyle(PlainListStyle())
+                                .refreshable {
+                                    fetchData()
+                                }
                             }
                         }
                         .tag("artists")
@@ -175,6 +178,9 @@ struct ContentView: View {
                                     .padding(.vertical, 5)
                                 }
                                 .listStyle(PlainListStyle())
+                                .refreshable {
+                                    fetchData()
+                                }
                                 .toast(isPresented: $devicesError, dismissAfter: 1.5) {
                                     Text("⚠️ No devices available")
                                         .font(.title2)
