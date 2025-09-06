@@ -24,6 +24,9 @@ struct SpotifyAPIApp: App {
             ContentView()
                 .environmentObject(spotifyController)
                 .environmentObject(network)
+                .onAppear() {
+                    spotifyController.setNetwork(network: network)
+                }
                 .onOpenURL { url in
                     spotifyController.handleRedirectURL(url)
                 }

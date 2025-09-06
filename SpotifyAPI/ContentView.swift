@@ -17,7 +17,7 @@ struct ContentView: View {
             if let token = spotifyController.accessToken {
                 Text("🔓 Authorized")
                 Button(action: {
-                    network.refreshToken(spotifyController: spotifyController)
+                    network.refreshToken()
                 }) {
                     Text("Refresh Spotify token")
                         .padding()
