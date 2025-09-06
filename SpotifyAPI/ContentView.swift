@@ -20,12 +20,29 @@ struct ContentView: View {
     @State private var topTracks: [Track] = []
     @State private var devicesError: Bool = false
     @State private var deviceName: String = ""
+    @State private var user: User?
     
     var body: some View {
         ZStack {
             if spotifyController.accessToken != nil {
                 VStack {
                     HStack {
+                        if let user = self.user,
+                           let url = URL(string: user.firstImageURL) {
+                            AsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 30, height: 30)
+                                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                                    .shadow(radius: 3)
+                            } placeholder: {
+                                RoundedRectangle(cornerRadius: 5)
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: 30, height: 30)
+                                    .overlay(ProgressView())
+                            }
+                        }
                         Spacer()
                         Picker("Zeitraum", selection: $selectedTimeRange) {
                             ForEach(TimeRange.allCases, id: \.self) { option in
@@ -39,8 +56,9 @@ struct ContentView: View {
                         }
                         Spacer()
                         Button(action: {
-                            network.refreshToken()
-                            fetchData()
+                            network.refreshToken() {
+                                fetchData()
+                            }
                         }) {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 15))
@@ -232,8 +250,15 @@ struct ContentView: View {
                         .cornerRadius(8)
                 }
                 .onAppear() {
+                    
                     fetchData()
+                    network.fetchUserInformation { user in
+                        DispatchQueue.main.async {
+                            self.user = user
+                        }
+                    }
                 }
+                
             } else {
                 Text("🔒 Not Authorized")
                 Button(action: {

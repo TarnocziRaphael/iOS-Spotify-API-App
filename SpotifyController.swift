@@ -27,10 +27,7 @@ class SpotifyController: NSObject, ObservableObject {
     @Published var refreshToken: String? = nil
     private var expiration: Date?
     private var network: Network?
-    
-    private let accessTokenKey = "spotifyAccessToken"
     private let refreshTokenKey = "spotifyRefreshToken"
-    private let expirationDateKey = "spotifyexpirationDate"
     
     override init() {
         super.init()
@@ -38,7 +35,7 @@ class SpotifyController: NSObject, ObservableObject {
     }
     
     func authorize() {
-        let scopes: SPTScope = [.userReadPrivate, .userTopRead, .userModifyPlaybackState, .userReadPlaybackState]
+        let scopes: SPTScope = [.userReadPrivate, .userTopRead, .userModifyPlaybackState, .userReadPlaybackState, .userReadEmail, .userReadPrivate]
         let campaign = "spotify_auth_test"
         
         if #available(iOS 13, *) {
@@ -53,11 +50,11 @@ class SpotifyController: NSObject, ObservableObject {
     func setAccessToken(token: String?) {
         self.accessToken = token
     }
-
+    
     func setRefreshToken(token: String?) {
         self.refreshToken = token
     }
-
+    
     func setExpiration(date: Date?) {
         self.expiration = date
     }
@@ -65,34 +62,19 @@ class SpotifyController: NSObject, ObservableObject {
     func setNetwork(network: Network) {
         self.network = network
     }
-
+    
     func saveInformation(accessToken: String, refreshToken: String, expiration: Date) {
-        UserDefaults.standard.set(accessToken, forKey: accessTokenKey)
         self.setAccessToken(token: accessToken)
         UserDefaults.standard.set(refreshToken, forKey: refreshTokenKey)
         self.setRefreshToken(token: refreshToken)
-        UserDefaults.standard.set(expiration, forKey: expirationDateKey)
         self.setExpiration(date: expiration)
         print("✅ Stored information successfully")
     }
     
     func loadInformation() {
-        if let accessToken = UserDefaults.standard.string(forKey: accessTokenKey),
-           let refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey),
-           let expiration = UserDefaults.standard.object(forKey: expirationDateKey) as? Date {
+        if let refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey) {
             self.setRefreshToken(token: refreshToken)
-            if expiration > Date() {
-                self.setAccessToken(token: accessToken)
-                self.setExpiration(date: expiration)
-                print("✅ Loaded valid token information.")
-            } else {
-                print("⚠️Token expired, need reauthorization")
-                if let network = self.network {
-                    network.refreshToken()
-                } else {
-                    print("⚠️ No refresh possible")
-                }
-            }
+            
             
         } else {
             print("⚠️ No saved token found")
@@ -100,11 +82,9 @@ class SpotifyController: NSObject, ObservableObject {
     }
     
     func clearInformation() {
-        UserDefaults.standard.removeObject(forKey: accessTokenKey)
         self.accessToken = nil
         UserDefaults.standard.removeObject(forKey: refreshTokenKey)
         self.refreshToken = nil
-        UserDefaults.standard.removeObject(forKey: expirationDateKey)
         self.expiration = nil
     }
 }

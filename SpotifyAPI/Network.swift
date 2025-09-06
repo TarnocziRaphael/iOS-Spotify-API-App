@@ -16,7 +16,9 @@ class Network: ObservableObject {
     
     init(spotifyController: SpotifyController) {
         self.spotifyController = spotifyController
-        self.updateHeaders()
+        self.refreshToken() {
+            self.updateHeaders()
+        }
     }
     
     func updateHeaders() {
@@ -28,7 +30,7 @@ class Network: ObservableObject {
         }
     }
     
-    func refreshToken() {
+    func refreshToken(completion: @escaping() -> Void) {
         guard let refreshToken = spotifyController.refreshToken,
               let clientId = Bundle.main.object(forInfoDictionaryKey: "CLIENT_ID") as? String else {
             print("❌ Missing refresh token or client ID")
@@ -61,6 +63,7 @@ class Network: ObservableObject {
                     refreshToken: data.refreshToken,
                     expiration: Date().addingTimeInterval(TimeInterval(data.expiration))
                 )
+                completion()
             case .failure(let error):
                 if let data = response.data, let text = String(data: data, encoding: .utf8) {
                     print("❌ Spotify Token Refresh Failed (response):", text)
@@ -166,6 +169,27 @@ class Network: ObservableObject {
             }
         }
     }
+    
+    func fetchUserInformation(completion: @escaping(User) -> Void) {
+        AF.request(
+            "\(baseURL)me",
+            method: .get,
+            headers: self.headers
+        )
+        .responseDecodable(of: User.self) { response in
+            switch response.result {
+            case .success(let data):
+                print("✅ Fetch of user data successful")
+                completion(data)
+            case .failure(let error):
+                if let data = response.data, let text = String(data: data, encoding: .utf8) {
+                    print("❌ Fetch of user data failed (response):", text)
+                } else {
+                    print("❌ Fetch of user data failed:", error.localizedDescription)
+                }
+            }
+        }
+    }
 }
 
 
@@ -234,7 +258,18 @@ struct DevicesResponse: Codable {
     let devices: [Device]
 }
 
-struct PlayBody: Encodable {
-    let uris: [String]
-    let position_ms: Int
+struct User: Codable, Identifiable {
+    let id: String
+    let name: String
+    let images: [Picture]
+    
+    var firstImageURL: String {
+        return images.first!.url
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name = "display_name"
+        case images
+    }
 }
