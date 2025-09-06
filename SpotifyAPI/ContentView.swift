@@ -22,10 +22,20 @@ struct ContentView: View {
     @State private var deviceName: String = ""
     @State private var user: User?
     @State private var displayUserInfo: Bool = false
+    @State private var isAuthorizing: Bool = true
     
     var body: some View {
         ZStack {
-            if spotifyController.accessToken != nil {
+            if network.isTokenLoading {
+                VStack {
+                    Spacer()
+                    ProgressView("Connecting to Spotify…")
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .font(.title2)
+                    Spacer()
+                }
+            }
+            else if spotifyController.accessToken != nil {
                 VStack {
                     HStack {
                         if let user = self.user,

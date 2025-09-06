@@ -14,6 +14,8 @@ class Network: ObservableObject {
     private let baseURL = "https://api.spotify.com/v1/"
     private var headers: HTTPHeaders = [:]
     
+    @Published var isTokenLoading: Bool = true
+    
     init(spotifyController: SpotifyController) {
         self.spotifyController = spotifyController
         self.refreshToken() {
@@ -31,6 +33,7 @@ class Network: ObservableObject {
     }
     
     func refreshToken(completion: @escaping() -> Void) {
+        self.isTokenLoading = true
         guard let refreshToken = spotifyController.refreshToken,
               let clientId = Bundle.main.object(forInfoDictionaryKey: "CLIENT_ID") as? String else {
             print("❌ Missing refresh token or client ID")
@@ -63,6 +66,7 @@ class Network: ObservableObject {
                     refreshToken: data.refreshToken,
                     expiration: Date().addingTimeInterval(TimeInterval(data.expiration))
                 )
+                self.isTokenLoading = false
                 completion()
             case .failure(let error):
                 if let data = response.data, let text = String(data: data, encoding: .utf8) {

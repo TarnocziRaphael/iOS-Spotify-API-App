@@ -74,8 +74,6 @@ class SpotifyController: NSObject, ObservableObject {
     func loadInformation() {
         if let refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey) {
             self.setRefreshToken(token: refreshToken)
-            
-            
         } else {
             print("⚠️ No saved token found")
         }
