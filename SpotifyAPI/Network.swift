@@ -71,9 +71,9 @@ class Network: ObservableObject {
         }
     }
     
-    func fetchTopArtists(timeRange: String, completion: @escaping([Artist]) -> Void) {
+    func fetchTopArtists(timeRange: TimeRange, completion: @escaping([Artist]) -> Void) {
         AF.request(
-            "\(baseURL)me/top/artists?time_range=\(timeRange)&limit=50",
+            "\(baseURL)me/top/artists?time_range=\(timeRange.rawValue)&limit=50",
             method: .get,
             headers: self.headers
         )
@@ -92,9 +92,9 @@ class Network: ObservableObject {
         }
     }
     
-    func fetchTopTracks(timeRange: String, completion: @escaping([Track]) -> Void) {
+    func fetchTopTracks(timeRange: TimeRange, completion: @escaping([Track]) -> Void) {
         AF.request(
-            "\(baseURL)me/top/tracks?time_range=\(timeRange)&limit=50",
+            "\(baseURL)me/top/tracks?time_range=\(timeRange.rawValue)&limit=50",
             method: .get,
             headers: self.headers
         )
@@ -113,14 +113,14 @@ class Network: ObservableObject {
         }
     }
     
-    func playMusic(id: String, type: String,deviceID: String) {
+    func playMusic(id: String, type: MusicType, deviceID: String) {
         var body: [String: Any] = [:]
-        if type == "artist" {
+        if type == .artist {
             body = [
                 "context_uri": "spotify:artist:\(id)",
                 "position_ms": 0
             ]
-        } else if type == "track" {
+        } else if type == .track {
             body = [
                 "uris": ["spotify:track:\(id)"],
                 "position_ms": 0
@@ -227,6 +227,7 @@ struct TopArtistsResponse: Codable {
 
 struct Device: Codable, Identifiable {
     let id: String
+    let name: String
 }
 
 struct DevicesResponse: Codable {

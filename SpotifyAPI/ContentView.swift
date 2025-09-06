@@ -13,19 +13,13 @@ struct ContentView: View {
     @EnvironmentObject var spotifyController: SpotifyController
     @EnvironmentObject var network: Network
     
-    @State private var selectedTimeRange = "4 Wochen"
-    @State private var selectedPage = "artists"
+    @State private var selectedTimeRange: TimeRange = .short_term
+    @State private var selectedPage: MusicType = .artist
     @State private var isLoading: Bool = false
     @State private var topArtists: [Artist] = []
     @State private var topTracks: [Track] = []
     @State private var devicesError: Bool = false
-    
-    let options = ["4 Wochen", "6 Monate", "1 Jahr"]
-    let request_terms = [
-        "4 Wochen": "short_term",
-        "6 Monate": "medium_term",
-        "1 Jahr": "long_term"
-    ]
+    @State private var deviceName: String = ""
     
     var body: some View {
         ZStack {
@@ -34,8 +28,8 @@ struct ContentView: View {
                     HStack {
                         Spacer()
                         Picker("Zeitraum", selection: $selectedTimeRange) {
-                            ForEach(options, id: \.self) { option in
-                                Text(option)
+                            ForEach(TimeRange.allCases, id: \.self) { option in
+                                Text(option.displayName).tag(option)
                             }
                         }
                         .pickerStyle(SegmentedPickerStyle())
@@ -64,7 +58,8 @@ struct ContentView: View {
                                 ProgressView("Loading top artists...")
                                     .progressViewStyle(CircularProgressViewStyle())
                                 Spacer()
-                            } else {
+                            }
+                            else {
                                 HStack {
                                     Text("Top Artists")
                                         .font(.title)
@@ -105,12 +100,13 @@ struct ContentView: View {
                                         
                                         Button(action: {
                                             network.fetchAvailableDevices() { devices in
-                                                guard let device_id = devices.first?.id else {
+                                                guard let device = devices.first else {
                                                     print("⚠️ No devices available")
                                                     self.devicesError = true
                                                     return
                                                 }
-                                                network.playMusic(id: artist.id, type: "artist", deviceID: device_id)
+                                                self.deviceName = device.name
+                                                network.playMusic(id: artist.id, type: MusicType.artist, deviceID: device.id)
                                             }
                                         }) {
                                             Image(systemName: "play.fill")
@@ -129,14 +125,15 @@ struct ContentView: View {
                                 }
                             }
                         }
-                        .tag("artists")
+                        .tag(MusicType.artist)
                         VStack {
                             if isLoading {
                                 Spacer()
                                 ProgressView("Loading top songs...")
                                     .progressViewStyle(CircularProgressViewStyle())
                                 Spacer()
-                            } else {
+                            }
+                            else {
                                 HStack {
                                     Text("Top Tracks")
                                         .font(.title)
@@ -177,12 +174,13 @@ struct ContentView: View {
                                         
                                         Button(action: {
                                             network.fetchAvailableDevices() { devices in
-                                                guard let device_id = devices.first?.id else {
+                                                guard let device = devices.first else {
                                                     print("⚠️ No devices available")
                                                     self.devicesError = true
                                                     return
                                                 }
-                                                network.playMusic(id: track.id, type: "track", deviceID: device_id)
+                                                self.deviceName = device.name
+                                                network.playMusic(id: track.id, type: MusicType.track, deviceID: device.id)
                                             }
                                         }) {
                                             Image(systemName: "play.fill")
@@ -202,7 +200,7 @@ struct ContentView: View {
                                 
                             }
                         }
-                        .tag("tracks")
+                        .tag(MusicType.track)
                     }
                     .tabViewStyle(PageTabViewStyle())
                     .onChange(of: selectedPage) {
@@ -214,6 +212,22 @@ struct ContentView: View {
                         .font(.title2)
                         .padding()
                         .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .toast(
+                    isPresented: Binding(
+                        get: { !self.deviceName.isEmpty },
+                        set: { _ in self.deviceName = "" }
+                    ),
+                    dismissAfter: 1.5,
+                    onDismiss: { self.deviceName = "" }
+                ) {
+                    Text("✅ Music started playing on \(self.deviceName)")
+                        .font(.title2)
+                        .lineLimit(1)
+                        .padding()
+                        .background(Color.green)
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
@@ -238,15 +252,15 @@ struct ContentView: View {
     
     private func fetchData() {
         self.isLoading = true
-        if self.selectedPage == "artists" {
-            network.fetchTopArtists(timeRange: request_terms[selectedTimeRange]!) { artists in
+        if self.selectedPage == .artist {
+            network.fetchTopArtists(timeRange: selectedTimeRange) { artists in
                 DispatchQueue.main.async {
                     self.topArtists = artists
                     self.isLoading = false
                 }
             }
-        } else {
-            network.fetchTopTracks(timeRange: request_terms[selectedTimeRange]!) { tracks in
+        } else if self.selectedPage == .track {
+            network.fetchTopTracks(timeRange:selectedTimeRange) { tracks in
                 DispatchQueue.main.async {
                     self.topTracks = tracks
                     self.isLoading = false
