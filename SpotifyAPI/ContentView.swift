@@ -93,10 +93,16 @@ struct ContentView: View {
                             }
                             else {
                                 HStack {
-                                    Text("Top Artists")
-                                        .font(.title)
-                                        .bold()
-                                        .padding()
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Top Artists")
+                                            .font(.title)
+                                            .bold()
+                                        Text("Popularity: \(self.averagePopularity())")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .padding(.horizontal)
+                                    
                                     Spacer()
                                 }
                                 List(topArtists) { artist in
@@ -161,16 +167,22 @@ struct ContentView: View {
                         VStack {
                             if isLoading {
                                 Spacer()
-                                ProgressView("Loading top songs...")
+                                ProgressView("Loading top tracks...")
                                     .progressViewStyle(CircularProgressViewStyle())
                                 Spacer()
                             }
                             else {
                                 HStack {
-                                    Text("Top Tracks")
-                                        .font(.title)
-                                        .bold()
-                                        .padding()
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Top Tracks")
+                                            .font(.title)
+                                            .bold()
+                                        Text("Popularity: \(self.averagePopularity())")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .padding(.horizontal)
+
                                     Spacer()
                                 }
                                 List(topTracks) { track in
@@ -315,6 +327,18 @@ struct ContentView: View {
             }
         }
         
+    }
+    
+    private func averagePopularity() -> Int {
+        if self.selectedPage == .artist {
+            guard !topArtists.isEmpty else { return 0 }
+            let total = topArtists.map { $0.popularity! }.reduce(0, +)
+            return total / topArtists.count
+        } else {
+            guard !topTracks.isEmpty else { return 0 }
+            let total = topTracks.map { $0.popularity }.reduce(0, +)
+            return total / topTracks.count
+        }
     }
 }
 

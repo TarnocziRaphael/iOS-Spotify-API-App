@@ -33,10 +33,11 @@ class Network: ObservableObject {
     }
     
     func refreshToken(completion: @escaping() -> Void) {
-        self.isTokenLoading = true
         guard let refreshToken = spotifyController.refreshToken,
               let clientId = Bundle.main.object(forInfoDictionaryKey: "CLIENT_ID") as? String else {
             print("❌ Missing refresh token or client ID")
+            self.isTokenLoading = false
+            completion()
             return
         }
         
@@ -69,11 +70,14 @@ class Network: ObservableObject {
                 self.isTokenLoading = false
                 completion()
             case .failure(let error):
+                self.spotifyController.clearInformation()
+                self.isTokenLoading = false
                 if let data = response.data, let text = String(data: data, encoding: .utf8) {
                     print("❌ Spotify Token Refresh Failed (response):", text)
                 } else {
                     print("❌ Spotify Token Refresh Failed:", error.localizedDescription)
                 }
+                completion()
             }
         }
     }
