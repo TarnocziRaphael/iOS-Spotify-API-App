@@ -1,31 +1,12 @@
-//
-//  ContentView.swift
-//  SpotifyAPI
-//
-//  Created by Raphael Tarnoczi on 06.09.25.
-//
-
 import SwiftUI
-import ToastUI
 
 struct ContentView: View {
     
     @EnvironmentObject var spotifyController: SpotifyController
     @EnvironmentObject var network: Network
     
-    @State private var selectedTimeRange: TimeRange = .short_term
-    @State private var selectedPage: MusicType = .artist
-    @State private var isLoading: Bool = false
-    @State private var topArtists: [Artist] = []
-    @State private var topTracks: [Track] = []
-    @State private var devicesError: Bool = false
-    @State private var deviceName: String = ""
-    @State private var user: User?
-    @State private var displayUserInfo: Bool = false
-    @State private var isAuthorizing: Bool = true
-    
     var body: some View {
-        ZStack {
+        VStack {
             if network.isTokenLoading {
                 VStack {
                     Spacer()
@@ -34,314 +15,144 @@ struct ContentView: View {
                         .font(.title2)
                     Spacer()
                 }
-            }
-            else if spotifyController.accessToken != nil {
-                VStack {
-                    HStack {
-                        if let user = self.user,
-                           let url = URL(string: user.firstImageURL) {
-                            AsyncImage(url: url) { image in
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 30, height: 30)
-                                    .clipShape(RoundedRectangle(cornerRadius: 5))
-                                    .shadow(radius: 3)
-                            } placeholder: {
-                                RoundedRectangle(cornerRadius: 5)
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 30, height: 30)
-                                    .overlay(ProgressView())
-                            }
-                            .onTapGesture {
-                                self.displayUserInfo = true
-                            }
-                        }
-                        Spacer()
-                        Picker("Zeitraum", selection: $selectedTimeRange) {
-                            ForEach(TimeRange.allCases, id: \.self) { option in
-                                Text(option.displayName).tag(option)
-                            }
-                        }
-                        .pickerStyle(SegmentedPickerStyle())
-                        .frame(width: 250)
-                        .onChange(of: selectedTimeRange) {
-                            fetchData()
-                        }
-                        Spacer()
-                        Button(action: {
-                            network.refreshToken() {
-                                fetchData()
-                            }
-                        }) {
-                            Image(systemName: "arrow.clockwise")
-                                .font(.system(size: 15))
-                                .foregroundStyle(.white)
-                                .padding(10)
-                                .background(Circle().fill(Color.blue))
-                                .shadow(radius: 5)
-                        }
-                    }
-                    
-                    TabView(selection: $selectedPage) {
-                        VStack {
-                            if isLoading {
-                                Spacer()
-                                ProgressView("Loading top artists...")
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                Spacer()
-                            }
-                            else {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Top Artists")
-                                            .font(.title)
-                                            .bold()
-                                        Text("Popularity: \(self.averagePopularity())")
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .padding(.horizontal)
-                                    
-                                    Spacer()
-                                }
-                                List(topArtists) { artist in
-                                    HStack(spacing: 15) {
-                                        if let urlString = artist.firstImageURL,
-                                           let url = URL(string: urlString) {
-                                            AsyncImage(url: url) { image in
-                                                image
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .frame(width: 70, height: 70)
-                                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                                    .shadow(radius: 3)
-                                            } placeholder: {
-                                                RoundedRectangle(cornerRadius: 10)
-                                                    .fill(Color.gray.opacity(0.3))
-                                                    .frame(width: 70, height: 70)
-                                                    .overlay(ProgressView())
-                                            }
-                                        }
-                                        
-                                        VStack(alignment: .leading, spacing: 5) {
-                                            Text(artist.name)
-                                                .font(.system(size: 20, weight: .bold))
-                                            if let popularity = artist.popularity {
-                                                Text("Popularity: \(popularity)")
-                                                    .font(.subheadline)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        Button(action: {
-                                            network.fetchAvailableDevices() { devices in
-                                                guard let device = devices.first else {
-                                                    print("⚠️ No devices available")
-                                                    self.devicesError = true
-                                                    return
-                                                }
-                                                self.deviceName = device.name
-                                                network.playMusic(id: artist.id, type: MusicType.artist, deviceID: device.id)
-                                            }
-                                        }) {
-                                            Image(systemName: "play.fill")
-                                                .font(.system(size: 25))
-                                                .foregroundStyle(.white)
-                                                .padding(10)
-                                                .background(Circle().fill(Color.blue))
-                                                .shadow(radius: 5)
-                                        }
-                                    }
-                                    .padding(.vertical, 5)
-                                }
-                                .listStyle(PlainListStyle())
-                                .refreshable {
-                                    fetchData()
-                                }
-                            }
-                        }
-                        .tag(MusicType.artist)
-                        VStack {
-                            if isLoading {
-                                Spacer()
-                                ProgressView("Loading top tracks...")
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                Spacer()
-                            }
-                            else {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Top Tracks")
-                                            .font(.title)
-                                            .bold()
-                                        Text("Popularity: \(self.averagePopularity())")
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    .padding(.horizontal)
-
-                                    Spacer()
-                                }
-                                List(topTracks) { track in
-                                    HStack(spacing: 15) {
-                                        if let urlString = track.album.firstImageURL,
-                                           let url = URL(string: urlString) {
-                                            AsyncImage(url: url) { image in
-                                                image
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .frame(width: 70, height: 70)
-                                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                                    .shadow(radius: 3)
-                                            } placeholder: {
-                                                RoundedRectangle(cornerRadius: 10)
-                                                    .fill(Color.gray.opacity(0.3))
-                                                    .frame(width: 70, height: 70)
-                                                    .overlay(ProgressView())
-                                            }
-                                        }
-                                        
-                                        VStack(alignment: .leading, spacing: 5) {
-                                            Text(track.name)
-                                                .font(.system(size: 20, weight: .bold))
-                                            Text(track.artistNames)
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
-                                            Text("Popularity: \(track.popularity)")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                        Spacer()
-                                        
-                                        Button(action: {
-                                            network.fetchAvailableDevices() { devices in
-                                                guard let device = devices.first else {
-                                                    print("⚠️ No devices available")
-                                                    self.devicesError = true
-                                                    return
-                                                }
-                                                self.deviceName = device.name
-                                                network.playMusic(id: track.id, type: MusicType.track, deviceID: device.id)
-                                            }
-                                        }) {
-                                            Image(systemName: "play.fill")
-                                                .font(.system(size: 25))
-                                                .foregroundStyle(.white)
-                                                .padding(10)
-                                                .background(Circle().fill(Color.blue))
-                                                .shadow(radius: 5)
-                                        }
-                                    }
-                                    .padding(.vertical, 5)
-                                }
-                                .listStyle(PlainListStyle())
-                                .refreshable {
-                                    fetchData()
-                                }
-                                
-                            }
-                        }
-                        .tag(MusicType.track)
-                    }
-                    .tabViewStyle(PageTabViewStyle())
-                    .onChange(of: selectedPage) {
-                        fetchData()
-                    }
-                }
-                .toast(isPresented: $devicesError, dismissAfter: 1.5) {
-                    Text("⚠️ No devices available")
-                        .font(.title2)
-                        .padding()
-                        .background(Color.red)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .toast(
-                    isPresented: Binding(
-                        get: { !self.deviceName.isEmpty },
-                        set: { _ in self.deviceName = "" }
-                    ),
-                    dismissAfter: 1.5,
-                    onDismiss: { self.deviceName = "" }
-                ) {
-                    Text("✅ Music started playing on \(self.deviceName)")
-                        .font(.title2)
-                        .lineLimit(1)
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .toast(isPresented: $displayUserInfo, dismissAfter: 1.5) {
-                    Text("🙋 Hello, \(user?.name ?? "User")!")
-                        .font(.title2)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .onAppear() {
-                    
-                    fetchData()
-                    network.fetchUserInformation { user in
-                        DispatchQueue.main.async {
-                            self.user = user
-                        }
-                    }
-                }
+            } else if spotifyController.accessToken != nil {
+                LandingView()
+                    .environmentObject(spotifyController)
+                    .environmentObject(network)
                 
             } else {
-                Text("🔒 Not Authorized")
-                Button(action: {
-                    spotifyController.authorize()
-                }) {
-                    Text("Connect to Spotify")
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                VStack(spacing: 20) {
+                    Text("🔒 Not Authorized")
+                        .font(.title2)
+                    Button(action: {
+                        spotifyController.authorize()
+                    }) {
+                        Text("Connect to Spotify")
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
                 }
             }
-        }
-        .padding()
-    }
-    
-    private func fetchData() {
-        self.isLoading = true
-        if self.selectedPage == .artist {
-            network.fetchTopArtists(timeRange: selectedTimeRange) { artists in
-                DispatchQueue.main.async {
-                    self.topArtists = artists
-                    self.isLoading = false
-                }
-            }
-        } else if self.selectedPage == .track {
-            network.fetchTopTracks(timeRange:selectedTimeRange) { tracks in
-                DispatchQueue.main.async {
-                    self.topTracks = tracks
-                    self.isLoading = false
-                }
-            }
-        }
-        
-    }
-    
-    private func averagePopularity() -> Int {
-        if self.selectedPage == .artist {
-            guard !topArtists.isEmpty else { return 0 }
-            let total = topArtists.map { $0.popularity! }.reduce(0, +)
-            return total / topArtists.count
-        } else {
-            guard !topTracks.isEmpty else { return 0 }
-            let total = topTracks.map { $0.popularity }.reduce(0, +)
-            return total / topTracks.count
         }
     }
 }
 
-#Preview {
-    ContentView()
+struct LandingView: View {
+    
+    @EnvironmentObject var spotifyController: SpotifyController
+    @EnvironmentObject var network: Network
+    
+    @State private var path: [String] = []
+    @State private var user: User?
+    @State private var isLoading = true
+    
+    var body: some View {
+        VStack {
+            if !isLoading {
+                NavigationStack(path: $path) {
+                    VStack(spacing: 40) {
+                        HStack(alignment: .center, spacing: 10) {
+                            Text("Welcome \(user?.name ?? "User")!")
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            if let user = self.user,
+                               let url = URL(string: user.firstImageURL) {
+                                AsyncImage(url: url) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 40, height: 40)
+                                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                                        .shadow(radius: 3)
+                                } placeholder: {
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .fill(Color.gray.opacity(0.3))
+                                        .frame(width: 40, height: 40)
+                                        .overlay(ProgressView())
+                                }
+                            }
+                        }
+                        .padding([.horizontal, .top])
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Spacer()
+                        Button(action: {
+                            path.append(NavigationGoal.topItem.rawValue)
+                        }) {
+                            HStack {
+                                Image(systemName: "star.fill")
+                                    .font(.title)
+                                Text("My Top Items")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .cornerRadius(15)
+                            .shadow(radius: 5)
+                        }
+                        Button(action: {
+                            path.append(NavigationGoal.playlist.rawValue)
+                        }) {
+                            HStack {
+                                Image(systemName: "music.note.list")
+                                    .font(.title)
+                                Text("Saved Playlists")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.green)
+                            .cornerRadius(15)
+                            .shadow(radius: 5)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 30)
+                    .navigationDestination(for: String.self) { value in
+                        switch value {
+                        case NavigationGoal.topItem.rawValue:
+                            TopItemsView()
+                                .environmentObject(spotifyController)
+                                .environmentObject(network)
+                        case NavigationGoal.playlist.rawValue:
+                            PlaylistView()
+                                .environmentObject(spotifyController)
+                                .environmentObject(network)
+                        default:
+                            EmptyView()
+                        }
+                    }
+                }
+            } else {
+                Spacer()
+                ProgressView("Loading data...")
+                    .progressViewStyle(CircularProgressViewStyle())
+                Spacer()
+            }
+        }
+        .onAppear() {
+            fetchData()
+        }
+        
+    }
+    private func fetchData() {
+        self.isLoading = true
+        network.fetchUserInformation { user in
+            DispatchQueue.main.async {
+                self.user = user
+                self.isLoading = false
+            }
+        }
+    }
 }

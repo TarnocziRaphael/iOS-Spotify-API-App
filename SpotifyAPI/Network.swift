@@ -198,6 +198,27 @@ class Network: ObservableObject {
             }
         }
     }
+    
+    func fetchPlaylists(completion: @escaping([Playlist]) -> Void) {
+        AF.request(
+            "\(baseURL)me/playlists",
+            method: .get,
+            headers: self.headers
+        )
+        .responseDecodable(of: PlaylistResponse.self) { response in
+            switch response.result {
+            case .success(let data):
+                print("✅ Fetch of users playlists successful")
+                completion(data.items)
+            case .failure(let error):
+                if let data = response.data, let text = String(data: data, encoding: .utf8) {
+                    print("❌ Fetch of users playlists failed (response):", text)
+                } else {
+                    print("❌ Fetch of  users playlists failed:", error.localizedDescription)
+                }
+            }
+        }
+    }
 }
 
 
@@ -280,4 +301,26 @@ struct User: Codable, Identifiable {
         case name = "display_name"
         case images
     }
+}
+
+struct Playlist: Codable, Identifiable {
+    let id: String
+    let images: [Picture]
+    let name: String
+    let snapshotId: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case images
+        case name
+        case snapshotId = "snapshot_id"
+    }
+    
+    var firstImageURL: String? {
+        return images.first?.url
+    }
+}
+
+struct PlaylistResponse: Codable {
+    let items: [Playlist]
 }

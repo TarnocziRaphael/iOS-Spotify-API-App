@@ -29,3 +29,10 @@ enum TimeRange: String, Identifiable, CaseIterable {
         }
     }
 }
+
+enum NavigationGoal: String, Identifiable, CaseIterable {
+    case playlist
+    case topItem
+    
+    var id: String { self.rawValue }
+}

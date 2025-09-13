@@ -35,7 +35,7 @@ class SpotifyController: NSObject, ObservableObject {
     }
     
     func authorize() {
-        let scopes: SPTScope = [.userReadPrivate, .userTopRead, .userModifyPlaybackState, .userReadPlaybackState, .userReadEmail, .userReadPrivate]
+        let scopes: SPTScope = [.userReadPrivate, .userTopRead, .userModifyPlaybackState, .userReadPlaybackState, .userReadEmail, .userReadPrivate, .playlistReadPrivate, .playlistReadCollaborative]
         let campaign = "spotify_auth_test"
         
         if #available(iOS 13, *) {
