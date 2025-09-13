@@ -219,6 +219,53 @@ class Network: ObservableObject {
             }
         }
     }
+    
+    func fetchPlaylistTracks(id: String, completion: @escaping([Track]) -> Void) {
+        var allTracks: [Track] = []
+        
+        func fetch(offset: Int) {
+            AF.request(
+                "\(baseURL)playlists/\(id)/tracks?limit=100&offset=\(offset)", //RESET LIMIT TO 100
+                method: .get,
+                headers: self.headers
+            )
+            .responseDecodable(of: PlaylistTracksResponse.self) { response in
+                switch response.result {
+                case .success(let data):
+                    var removedCount = 0
+
+                    let tracks = data.items.compactMap { item -> Track? in
+                        // If the track is nil or local, skip it and increment removedCount
+                        if item.track == nil || item.local == true {
+                            removedCount += 1
+                            return nil
+                        }
+                        return item.track
+                    }
+                    allTracks.append(contentsOf: tracks)
+                    
+                    // If there are more tracks, fetch next batch
+                    if allTracks.count < data.total-removedCount {
+                        fetch(offset: allTracks.count)
+                    } else {
+                        completion(allTracks)
+                    }
+                    
+                case .failure(let error):
+                    if let data = response.data, let text = String(data: data, encoding: .utf8) {
+                        print("❌ Fetch of playlist tracks failed (response):", text)
+                        print(error)
+                    } else {
+                        print("❌ Fetch of playlist tracks failed:", error.localizedDescription)
+                    }
+                    completion(allTracks) // Return whatever we have so far
+                }
+            }
+        }
+        
+        // Start fetching
+        fetch(offset: 0)
+    }
 }
 
 
@@ -235,7 +282,7 @@ struct TokenRefresh: Codable {
 }
 
 struct Track: Codable, Identifiable {
-    let id: String
+    let id: String?
     let name: String
     let popularity: Int
     let album: Album
@@ -246,7 +293,7 @@ struct Track: Codable, Identifiable {
     }
 }
 
-struct Picture: Codable {
+struct Picture: Codable, Hashable {
     let url: String
 }
 
@@ -260,7 +307,7 @@ struct Album: Codable {
 }
 
 struct Artist: Codable, Identifiable {
-    let id: String
+    let id: String?
     let name: String
     let popularity: Int?
     let images: [Picture]?
@@ -270,11 +317,11 @@ struct Artist: Codable, Identifiable {
     }
 }
 
-struct TopTracksResponse: Codable {
+private struct TopTracksResponse: Codable {
     let items: [Track]
 }
 
-struct TopArtistsResponse: Codable {
+private struct TopArtistsResponse: Codable {
     let items: [Artist]
 }
 
@@ -283,7 +330,7 @@ struct Device: Codable, Identifiable {
     let name: String
 }
 
-struct DevicesResponse: Codable {
+private struct DevicesResponse: Codable {
     let devices: [Device]
 }
 
@@ -303,7 +350,7 @@ struct User: Codable, Identifiable {
     }
 }
 
-struct Playlist: Codable, Identifiable {
+struct Playlist: Codable, Identifiable, Hashable {
     let id: String
     let images: [Picture]
     let name: String
@@ -321,6 +368,21 @@ struct Playlist: Codable, Identifiable {
     }
 }
 
-struct PlaylistResponse: Codable {
+private struct PlaylistResponse: Codable {
     let items: [Playlist]
+}
+
+private struct PlaylistTracksResponse: Codable {
+    let items: [PlaylistTracks]
+    let total: Int
+}
+
+private struct PlaylistTracks: Codable {
+    let track: Track?
+    let local: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case track
+        case local = "is_local"
+    }
 }

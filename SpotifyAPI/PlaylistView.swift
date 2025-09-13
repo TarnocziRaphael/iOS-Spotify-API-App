@@ -6,13 +6,16 @@
 //
 
 import SwiftUI
+import ToastUI
 
 struct PlaylistView: View {
     
     @EnvironmentObject var spotifyController: SpotifyController
     @EnvironmentObject var network: Network
+    @EnvironmentObject var navModel: NavigationModel
     @State private var user: User?
     @State private var isLoading: Bool = true
+    @State private var displayUserInfo: Bool = false
     @State private var playlists: [Playlist] = []
     
     var body: some View {
@@ -27,7 +30,6 @@ struct PlaylistView: View {
                 }
             }
             else if spotifyController.accessToken != nil {
-                
                 VStack {
                     if self.isLoading {
                         Spacer()
@@ -36,16 +38,6 @@ struct PlaylistView: View {
                         Spacer()
                     }
                     else {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Playlists")
-                                    .font(.title)
-                                    .bold()
-                            }
-                            .padding(.horizontal)
-                            
-                            Spacer()
-                        }
                         List(playlists) { playlist in
                             HStack(spacing: 15) {
                                 if let urlString = playlist.firstImageURL,
@@ -72,12 +64,49 @@ struct PlaylistView: View {
                                 }
                             }
                             .padding(.vertical, 5)
+                            .onTapGesture {
+                                navModel.path.append(NavigationGoal.playlistDetail(playlist))
+                            }
                         }
                         .listStyle(PlainListStyle())
                         .refreshable {
                             fetchData()
                         }
+                        .navigationTitle("Playlists")
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                if let user = self.user,
+                                   let url = URL(string: user.firstImageURL) {
+                                    Button(action: {
+                                        self.displayUserInfo = true
+                                    }) {
+                                        AsyncImage(url: url) { image in
+                                            image
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 40, height: 40)
+                                                .clipShape(RoundedRectangle(cornerRadius: 5))
+                                                .shadow(radius: 3)
+                                        } placeholder: {
+                                            RoundedRectangle(cornerRadius: 5)
+                                                .fill(Color.gray.opacity(0.3))
+                                                .frame(width: 40, height: 40)
+                                                .overlay(ProgressView())
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                     }
+                }
+                .toast(isPresented: $displayUserInfo, dismissAfter: 1.5) {
+                    Text("🙋 Hello, \(user?.name ?? "User")!")
+                        .font(.title2)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
                 .onAppear() {
                     self.isLoading = true
@@ -89,6 +118,7 @@ struct PlaylistView: View {
                         
                     }
                 }
+                
             }
         }
         .padding()

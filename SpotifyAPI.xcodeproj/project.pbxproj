@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2E0FFAF02E75F8C3007A38D3 /* NavigationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E0FFAEF2E75F8C3007A38D3 /* NavigationModel.swift */; };
 		2E37E4042E6CA668005FA849 /* ToastUI in Frameworks */ = {isa = PBXBuildFile; productRef = 2E37E4032E6CA668005FA849 /* ToastUI */; };
 		2EF389982E6C47BA0033378A /* SpotifyiOS in Frameworks */ = {isa = PBXBuildFile; productRef = 2EF389972E6C47BA0033378A /* SpotifyiOS */; };
 		2EF3899D2E6C4A960033378A /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 2EF3899C2E6C4A960033378A /* Config.xcconfig */; };
@@ -15,6 +16,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2E0FFAEF2E75F8C3007A38D3 /* NavigationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationModel.swift; sourceTree = "<group>"; };
 		2EF389872E6C47240033378A /* SpotifyAPI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpotifyAPI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2EF3899C2E6C4A960033378A /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		2EF3899E2E6C4CFE0033378A /* SpotifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyController.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				2EF3899E2E6C4CFE0033378A /* SpotifyController.swift */,
+				2E0FFAEF2E75F8C3007A38D3 /* NavigationModel.swift */,
 				2EF3899C2E6C4A960033378A /* Config.xcconfig */,
 				2EF389892E6C47240033378A /* SpotifyAPI */,
 				2EF389882E6C47240033378A /* Products */,
@@ -157,6 +160,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2EF3899F2E6C4D030033378A /* SpotifyController.swift in Sources */,
+				2E0FFAF02E75F8C3007A38D3 /* NavigationModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

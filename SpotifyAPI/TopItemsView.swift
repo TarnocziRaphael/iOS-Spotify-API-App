@@ -113,7 +113,11 @@ struct TopItemsView: View {
                                             return
                                         }
                                         self.deviceName = device.name
-                                        network.playMusic(id: artist.id, type: .artist, deviceID: device.id)
+                                        guard let artistId = artist.id else {
+                                            print("⚠️ No artist id available")
+                                            return
+                                        }
+                                        network.playMusic(id: artistId, type: .artist, deviceID: device.id)
                                     }
                                 }
                                 .refreshable {
@@ -151,7 +155,11 @@ struct TopItemsView: View {
                                             return
                                         }
                                         self.deviceName = device.name
-                                        network.playMusic(id: track.id, type: .track, deviceID: device.id)
+                                        guard let trackId = track.id else {
+                                            print("⚠️ No track id available")
+                                            return
+                                        }
+                                        network.playMusic(id: trackId, type: .track, deviceID: device.id)
                                     }
                                 }
                                 .refreshable {

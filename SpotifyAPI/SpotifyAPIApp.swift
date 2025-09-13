@@ -12,6 +12,7 @@ struct SpotifyAPIApp: App {
     
     @StateObject var spotifyController = SpotifyController()
     @StateObject var network: Network
+    @StateObject var navModel = NavigationModel()
     
     init() {
         let controller = SpotifyController()
@@ -24,6 +25,7 @@ struct SpotifyAPIApp: App {
             ContentView()
                 .environmentObject(spotifyController)
                 .environmentObject(network)
+                .environmentObject(navModel)
                 .onAppear() {
                     spotifyController.setNetwork(network: network)
                 }

@@ -17,8 +17,6 @@ struct ContentView: View {
                 }
             } else if spotifyController.accessToken != nil {
                 LandingView()
-                    .environmentObject(spotifyController)
-                    .environmentObject(network)
                 
             } else {
                 VStack(spacing: 20) {
@@ -43,15 +41,15 @@ struct LandingView: View {
     
     @EnvironmentObject var spotifyController: SpotifyController
     @EnvironmentObject var network: Network
+    @EnvironmentObject var navModel: NavigationModel
     
-    @State private var path: [String] = []
     @State private var user: User?
     @State private var isLoading = true
     
     var body: some View {
         VStack {
             if !isLoading {
-                NavigationStack(path: $path) {
+                NavigationStack(path: $navModel.path) {
                     VStack(spacing: 40) {
                         HStack(alignment: .center, spacing: 10) {
                             Text("Welcome \(user?.name ?? "User")!")
@@ -82,7 +80,7 @@ struct LandingView: View {
                         
                         Spacer()
                         Button(action: {
-                            path.append(NavigationGoal.topItem.rawValue)
+                            navModel.path.append(NavigationGoal.topItem)
                         }) {
                             HStack {
                                 Image(systemName: "star.fill")
@@ -90,6 +88,7 @@ struct LandingView: View {
                                 Text("My Top Items")
                                     .font(.title2)
                                     .fontWeight(.semibold)
+                                    .navigationTitle("Start")   
                             }
                             .foregroundColor(.white)
                             .padding()
@@ -99,7 +98,7 @@ struct LandingView: View {
                             .shadow(radius: 5)
                         }
                         Button(action: {
-                            path.append(NavigationGoal.playlist.rawValue)
+                            navModel.path.append(NavigationGoal.playlist)
                         }) {
                             HStack {
                                 Image(systemName: "music.note.list")
@@ -107,6 +106,7 @@ struct LandingView: View {
                                 Text("Saved Playlists")
                                     .font(.title2)
                                     .fontWeight(.semibold)
+                                    .navigationTitle("Start")
                             }
                             .foregroundColor(.white)
                             .padding()
@@ -119,20 +119,17 @@ struct LandingView: View {
                         Spacer()
                     }
                     .padding(.horizontal, 30)
-                    .navigationDestination(for: String.self) { value in
+                    .navigationDestination(for: NavigationGoal.self) { value in
                         switch value {
-                        case NavigationGoal.topItem.rawValue:
+                        case NavigationGoal.topItem:
                             TopItemsView()
-                                .environmentObject(spotifyController)
-                                .environmentObject(network)
-                        case NavigationGoal.playlist.rawValue:
+                        case NavigationGoal.playlist:
                             PlaylistView()
-                                .environmentObject(spotifyController)
-                                .environmentObject(network)
-                        default:
-                            EmptyView()
+                        case NavigationGoal.playlistDetail(let playlist):
+                            PlaylistDetailView(playlist: playlist)
                         }
                     }
+                    .toolbar(.hidden, for: .navigationBar)
                 }
             } else {
                 Spacer()
